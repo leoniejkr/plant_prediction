@@ -4,4 +4,8 @@
 # ignore virtual environment settings
 venv/
 
+
+# ignore models & outputs
+saved_models/
+
 __pycache__/
