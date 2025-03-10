@@ -16,6 +16,10 @@ def main():
     val_df = data_splitter.create_dataframe(val_dir)
     test_df = data_splitter.create_dataframe(test_dir)
 
+    # get class names from the folder names in the train directory
+    class_names = sorted(os.listdir(train_dir))  # here: folder name == type
+    print(f"Class Names: {class_names}")
+
     transform = transforms.Compose([
         transforms.Resize((224, 224)),  # Resize all images to 224x224
         transforms.ToTensor(),  # Convert PIL image to PyTorch tensor
@@ -62,7 +66,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    num_classes = len(train_df["label"].unique())  # Number of unique plant species in the dataset
+    num_classes = len(class_names)  # Number of unique plant species in the dataset
 
     # Load chosen model
     if model_choice == '1':
@@ -134,13 +138,18 @@ def main():
 
     # ------------------------------------------------------------------------------------------------------------------------ #
     # Train & save the model
-    train_model(model, train_loader, val_loader, criterion, optimizer, epochs=15)
+    train_model(model, train_loader, val_loader, criterion, optimizer, epochs=5)
 
     MODEL_DIR = os.path.join(os.getcwd(), "saved_models")
     os.makedirs(MODEL_DIR, exist_ok=True)  # Create folder if it doesn't exist
 
     MODEL_PATH = os.path.join(MODEL_DIR, "plant_classifier.pth")
-    torch.save(model.state_dict(), MODEL_PATH)
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'num_classes': num_classes,  # save number class for reuse
+        'transform': transform,  # save transform for reuse
+        'class_names': class_names  # save class names for later use
+    }, MODEL_PATH)
     print(f"Model saved to: {MODEL_PATH}")
 
 if __name__ == "__main__":
